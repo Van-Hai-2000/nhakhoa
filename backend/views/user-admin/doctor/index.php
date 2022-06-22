@@ -1,0 +1,72 @@
+<?php
+
+use yii\helpers\Html;
+use yii\grid\GridView;
+
+/* @var $this yii\web\View */
+/* @var $searchModel backend\models\search\UserAdminSearch */
+/* @var $dataProvider yii\data\ActiveDataProvider */
+
+$this->title = 'Danh sách bác sĩ';
+$this->params['breadcrumbs'][] = $this->title;
+?>
+<div class="user-admin-index">
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2><?= Html::encode($this->title) ?></h2>
+                    <?= Html::a('Tạo tài khoản', ['create-doctor'], ['class' => 'btn btn-success pull-right']) ?>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    <?=
+                    GridView::widget([
+                        'dataProvider' => $dataProvider,
+                        'filterModel' => $searchModel,
+                        'columns' => [
+                            ['class' => 'yii\grid\SerialColumn'],
+                            [
+                                'attribute' => 'username',
+                                'options' => ['style' => 'width:120px']
+                            ],
+                            'fullname',
+                            'email',
+                            [
+                                'attribute' => 'branch_id',
+                                'value' => 'branch.name',
+                                'filter' => Html::activeDropDownList($searchModel, 'branch_id', \common\models\branch\Branch::getBranch(), ['class' => 'form-control', 'prompt' => 'Tất cả'])
+                            ],
+                            [
+                                'attribute' => 'status',
+                                'options' => ['style' => 'width:120px'],
+                                'value' => function($model) {
+                                    return $model->status ? 'Kích hoạt' : 'Dừng hoạt động';
+                                },
+                                'filter' => Html::activeDropDownList($searchModel, 'status', [\backend\models\UserAdmin::STATUS_DELETED => 'Dừng hoạt động', \backend\models\UserAdmin::STATUS_ACTIVE => 'Kích hoạt'], ['class' => 'form-control', 'prompt' => 'Tất cả'])
+                            ],
+                            'created_at' => [
+                                'header' => 'Ngày tạo',
+                                'content' => function($model) {
+                                    return date('d/m/Y', $model->created_at);
+                                }
+                            ],
+                            [
+                                'class' => 'yii\grid\ActionColumn',
+                                'template' => '{edit_docter}',
+                                'buttons' => [
+                                    'edit_docter' => function ($url, $model) {
+                                        return Html::a('<span class="glyphicon glyphicon-pencil"></span>', 'update-doctor?id='.$model->id, [
+                                            'title' => Yii::t('app', 'Chỉnh sửa'),
+                                        ]);
+                                    },
+                                ],
+                            ],
+                        ],
+                    ]);
+                    ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
