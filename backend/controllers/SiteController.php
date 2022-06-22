@@ -3,7 +3,6 @@
 namespace backend\controllers;
 
 use backend\models\UserAdmin;
-use common\components\ClaNhakhoa;
 use Yii;
 use yii\web\Controller;
 use yii\filters\VerbFilter;

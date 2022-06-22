@@ -6,6 +6,7 @@ use backend\models\UserAdmin;
 use common\components\ClaActiveRecordLog;
 use common\models\branch\Branch;
 use common\models\product\ProductCategory;
+use common\models\User;
 use Yii;
 
 /**
@@ -103,5 +104,14 @@ class Appointment extends ClaActiveRecordLog
     public function getProductCategory()
     {
         return $this->hasOne(ProductCategory::className(), ['id' => 'product_category_id'])->select('id,name');
+    }
+    public function getUser(){
+        return $this->hasOne(User::className(),['id'=>'user_id'])->select('id,username');
+    }
+    public function getAllbyDoctor(){
+        $condition = '1=1';
+        $params = array();
+        $command = new \yii\db\Query();
+        $select = 't.*';
     }
 }

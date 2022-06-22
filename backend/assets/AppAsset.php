@@ -39,7 +39,6 @@ class AppAsset extends AssetBundle
         'js/jqueryui/jquery-ui.min.js',
         'js/add.js',
         'js/custom.js',
-        'js/nhakhoa.js',
     ];
     public $depends = [
         'yii\web\YiiAsset',

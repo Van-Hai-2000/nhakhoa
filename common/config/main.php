@@ -7,6 +7,7 @@ const __NAME_SITE = 'nhakhoa';
 const __VOUCHER = 'OV';
 const __VOUCHER_RED = 'OVr';
 const __VOUCHER_SALE = 'E.OV';
+const __VAT = 0.1;
 
 function __removeDF($string)
 {
@@ -40,8 +41,8 @@ $config =  [
     'components' => [
         'db' => [
             'class' => 'yii\db\Connection',
-            'dsn' => 'mysql:host=localhost;dbname=nhakhoatest',
-            'username' => 'user_nhakhoatest',
+            'dsn' => 'mysql:host=localhost;dbname=nhakhoa',
+            'username' => 'user_quangbinh',
             'password' => 'ReDpNMNzcdqgmVCfmuzG',
             'charset' => 'utf8',
         ],

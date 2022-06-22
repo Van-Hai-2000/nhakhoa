@@ -5,8 +5,18 @@ namespace backend\modules\user\controllers;
 use backend\models\UserAdmin;
 use common\components\ClaApi;
 use common\components\UploadLib;
+use common\models\appointment\Appointment;
 use common\models\banner\Banner;
+use common\models\medical_record\Factory;
+use common\models\medicine\Medicine;
 use common\models\sale\CustomerSales;
+use common\models\user\MedicalRecord;
+use common\models\user\MedicalRecordChild;
+use common\models\user\MedicalRecordImage;
+use common\models\user\MedicalRecordItem;
+use common\models\user\MedicalRecordItemChild;
+use common\models\user\MedicalRecordItemMedicine;
+use common\models\user\search\MedicalRecordChildSearch;
 use common\models\user\UserLog;
 use Yii;
 use common\models\user\User;
@@ -45,7 +55,6 @@ class UserController extends Controller
     {
         $searchModel = new UserSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
@@ -59,11 +68,47 @@ class UserController extends Controller
      */
     public function actionView($id)
     {
+        $model= $this->findModel($id);
+ 
+        $address = User::getAddress($model['province_id'],$model['district_id'],$model['ward_id']);
+        //HSBA
+        $medical_record= MedicalRecord::find()->where(['user_id' => $id ])->andWhere(['!=', 'status', MedicalRecord::STATUS_DELETE])->asArray()->all();
+        //Đơn thuốc
+        $medical_record_item_medicine = MedicalRecordItemMedicine::find()->where(['user_id' => $id])->joinWith(['medicine', 'userAdmin','user'])->orderBy('created_at DESC')->all();
+        //liêu trình điều trị(Tổng hợp) //product tên thu thuật productcategory nhóm thủ thuật
+        $medical_record_child = MedicalRecordChild::find()->where(['user_id' => $id])->joinWith(['product','user','productCategory'])->asArray()->all();
+        //Liệu trình điều trị (Chưa khám)
+        $medical_record_child_no = MedicalRecordChild::find()->where(['user_id' => $id])->andWhere('medical_record_child.quantity > medical_record_child.quantity_use')->joinWith(['product','user','productCategory'])->asArray()->all();
+        //HS Chi nhánh
+        $medical_record_item = MedicalRecordItem::find()->where(['user_id' => $id])->joinWith('branch')->orderBy('created_at DESC')->asArray()->all();
+        //Thủ thuật chi tiết
+        $medical_record_item_child = \common\models\user\MedicalRecordItemChild::find()->where(['user_id' => $id])->joinWith(['product', 'userAdmin','branch'])->orderBy('created_at DESC')->asArray()->all();
+        //Đặt xưởng
+        $factory = Factory::find()->where(['user_id' => $id])->joinWith(['branch', 'userAdmin', 'loaimau'])->orderBy('created_at DESC')->asArray()->all();
+        $images =[];
+        $i =0;
+        $payment_history= [];
+        foreach($medical_record as $key){
+            $images[] = MedicalRecordImage::find()->where(['medical_record_id' => $key['id']])->asArray()->all();
+            $payment_history[] = \common\models\user\PaymentHistory::find()->where(['medical_record_id' => $key['id']])->joinWith(['userAdmin', 'branch'])->orderBy('created_at DESC')->asArray()->all();
+        }
+        $lich_hen = Appointment::find()->where(['user_id' => $id, 'status_delete' => 0])->joinWith(['userAdmin','branch','user'])->asArray()->all();
+
         return $this->render('view', [
-            'model' => $this->findModel($id),
+            'model' => $model,
+            'address' => $address,
+            'medical_record_item_child' => $medical_record_item_child,
+            'medical_record_child'=>$medical_record_child,
+            'factory'=>$factory,
+            'images'=> $images,
+            'medical_record'=>$medical_record,
+            'lich_hen'=>$lich_hen,
+            'medical_record_item_medicine'=>$medical_record_item_medicine,
+            'medical_record_child_no'=>$medical_record_child_no,
+            'medical_record_item'=>$medical_record_item,
+            'payment_history'=>$payment_history
         ]);
     }
-
     /**
      * Creates a new User model.
      * If creation is successful, the browser will be redirected to the 'view' page.

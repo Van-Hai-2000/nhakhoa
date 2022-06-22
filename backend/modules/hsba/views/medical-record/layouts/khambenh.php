@@ -11,7 +11,7 @@ use yii\widgets\ActiveForm;
 ?>
 <div class="modal fade khambenh" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
     <?php $form = ActiveForm::begin([
-            'id' => 'form_kham_benh'
+            'id' => 'kbsm'
     ]); ?>
 
     <div class="modal-dialog modal-lg">

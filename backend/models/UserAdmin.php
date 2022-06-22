@@ -42,6 +42,7 @@ class UserAdmin extends ActiveRecord implements IdentityInterface
     const USER_FAN = 8; // Tài khoản cộng tác viên
     const USER_MARKETING = 9; // Tài khoản marketing
     const USER_CSKH = 10; // Tài khoản chăm sóc khách hàng
+    const USER_SALE = 11; // Tài khoản sale
 
     public $_error_opt;
 
@@ -74,10 +75,14 @@ class UserAdmin extends ActiveRecord implements IdentityInterface
             ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
             ['type', 'safe'],
             ['vai_tro', 'integer'],
-            ['fullname', 'string', 'max' => 255],
+            [['fullname','image_identification_before','image_identification_after','issued_by_identification','name_training_unit','graduation_year','specialist','issued_by_certificates'], 'string', 'max' => 255],
             ['src', 'string', 'max' => 255],
-            ['phone', 'string', 'max' => 50],
-            ['branch_id', 'safe']
+            [['phone','phone2'], 'string', 'max' => 50],
+            ['branch_id', 'safe'],
+            [['identification'],'integer'],
+            [['date_range_identification','specialize','degree','number_of_certificates','date_range_certificates'],'integer'],
+            [['work_experience'] ,'string'],
+            ['contract_status','integer'],
         ];
     }
 
@@ -96,7 +101,23 @@ class UserAdmin extends ActiveRecord implements IdentityInterface
             'vai_tro' => 'Loại tài khoản',
             'src' => 'Ảnh đại diện',
             'phone' => 'Số điện thoại',
-            'fullname' => 'Họ và tên'
+            'fullname' => 'Họ và tên',
+            'phone2' => 'Số điện thoại 2',
+            'identification'=> 'Số CMND/CCCD',
+            'date_range_identification' => 'Ngày cấp',
+            'issued_by_identification' => 'Nơi cấp',
+            'image_identification_before' => 'Ảnh CMND/CCCD mặt trước',
+            'image_identification_after' => 'Ảnh CMND/CCCD mặt sau',
+            'specialize' => 'Chuyên môn',
+            'degree' => 'Bằng cấp',
+            'name_training_unit'=> 'Đơn vị đào tạo',
+            'graduation_year' => 'Năm tốt nghiệp',
+            'specialist' => 'Chuyên khoa',
+            'number_of_certificates' => 'Số chứng chỉ hành nghề',
+            'date_range_certificates' => 'Ngày cấp chứng chỉ',
+            'issued_by_certificates'=> 'Nơi cấp chứng chỉ',
+            'work_experience' => 'Kinh nghiệm làm việc',
+            'contract_status' => 'Tình trạng hợp đồng'
         ];
     }
 
@@ -254,6 +275,7 @@ class UserAdmin extends ActiveRecord implements IdentityInterface
             self::USER_FAN => 'Fanpage',
             self::USER_MARKETING => 'Marketing',
             self::USER_CSKH => 'Chăm sóc khách hàng',
+            self::USER_SALE => 'Saler',
         ];
     }
 
@@ -468,5 +490,34 @@ class UserAdmin extends ActiveRecord implements IdentityInterface
 
     public function getKpi() {
         return $this->hasMany(KpiUser::className(), ['user_id' => 'id']);
+    }
+
+
+    static public function getSpecialize(){
+        return
+        [
+            0 => 'Không có',
+            1 => 'Bác sĩ',
+            2 => 'Điều dưỡng',
+            3 => 'Kỹ thuật viên',
+        ];
+    }
+    static public function getDegree(){
+        return
+            [
+                0 => 'Không',
+                1 => 'Trung cấp',
+                2 => 'Cao đẳng',
+                3 => 'Đại học',
+            ];
+    }
+    static public function getContractStatus(){
+        return
+            [
+                0 => 'Chưa ký',
+                1 => 'Đã ký(Thử việc)',
+                2 => 'Đã ký(3 Năm)',
+                3 => 'Đã ký(5 Năm)',
+            ];
     }
 }

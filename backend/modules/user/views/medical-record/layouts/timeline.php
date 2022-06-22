@@ -92,6 +92,10 @@ $last_payment = \common\models\user\PaymentHistory::find()->where(['medical_reco
                 <button class="pull-right btn btn-primary" data-toggle="modal" data-target=".hinhanh"
                         onclick="load_image()">Xem hình ảnh
                 </button>
+                <button class="pull-right btn btn-primary" data-toggle="modal" data-target=".commission"
+                        onclick="fix_commission()">
+                    Chỉnh sửa
+                </button>
             </div>
         </div>
     </div>
@@ -214,6 +218,20 @@ $last_payment = \common\models\user\PaymentHistory::find()->where(['medical_reco
             }
         });
     });
+
+    function fix_commission(id) {
+        $.ajax({
+            url: '/admin/user/medical-record/load-fix',
+            type: 'GET',
+            data: {
+                id: id,
+            },
+            success: function (data,model) {
+                $('.commission_body').empty().html(data);
+                console.log(model);
+            }
+        })
+    }
 
 </script>
 

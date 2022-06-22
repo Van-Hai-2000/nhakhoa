@@ -29,10 +29,6 @@ use yii\db\Exception;
 
 class ClaNhakhoa
 {
-    public $data_return;
-    public $is_return = 0;
-    const TYPE_MONEY_1 = 1; //Theo %
-    const TYPE_MONEY_2 = 2; // Theo tiền mặt
     public static function getTotal($provider, $fieldName)
     {
         $total = 0;
@@ -697,25 +693,4 @@ class ClaNhakhoa
         }
         return $response;
     }
-    static function check_array($p_array){
-        if(is_array($p_array) and sizeof($p_array)>0){
-            return true;
-        }else{
-            return false;
-        }
-    }
-
-    //Lấy tổng dữ liệu 1 field trong 1 mảng nhiều dữ liệu
-    static function getSum($arr,$field_name){
-        $sum = 0;
-        if(self::check_array($arr)){
-            foreach ($arr as $value){
-                if(isset($value[$field_name]) && $value[$field_name]){
-                    $sum += intval($value[$field_name]);
-                }
-            }
-        }
-        return $sum;
-    }
 }
-

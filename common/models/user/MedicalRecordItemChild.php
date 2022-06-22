@@ -6,6 +6,7 @@ use backend\models\UserAdmin;
 use common\models\branch\Branch;
 use common\models\product\Product;
 use Yii;
+use yii\helpers\ArrayHelper;
 use yii\behaviors\TimestampBehavior;
 
 /**
@@ -27,8 +28,6 @@ use yii\behaviors\TimestampBehavior;
  * @property integer $created_at
  * @property integer $updated_at
  * @property integer $note
- * @property integer $type_sale
- * @property integer $sale_value
  */
 class MedicalRecordItemChild extends \yii\db\ActiveRecord
 {
@@ -49,9 +48,9 @@ class MedicalRecordItemChild extends \yii\db\ActiveRecord
     {
         return [
             [['user_id', 'medical_record_id', 'medical_record_item_id', 'product_id', 'doctor_id'], 'required'],
-            [['user_id', 'medical_record_id', 'medical_record_item_id', 'product_id', 'doctor_id', 'status', 'quantity', 'branh_id', 'created_at', 'updated_at','type_sale'], 'integer'],
+            [['user_id', 'medical_record_id', 'medical_record_item_id', 'product_id', 'doctor_id', 'status', 'quantity', 'branh_id', 'created_at', 'updated_at'], 'integer'],
             [['chuan_doan', 'description'], 'string'],
-            [['money','sale_value'], 'number'],
+            [['money'], 'number'],
             [['product_name'], 'string', 'max' => 255],
             [['note'], 'string', 'max' => 500],
         ];
@@ -68,13 +67,13 @@ class MedicalRecordItemChild extends \yii\db\ActiveRecord
             'medical_record_id' => 'Medical Record ID',
             'medical_record_item_id' => 'Medical Record Item ID',
             'product_id' => 'Thủ thuật',
-            'product_name' => 'Product Name',
+            'product_name' => 'Tên thủ thuật',
             'chuan_doan' => 'Chuan Doan',
             'description' => 'Description',
             'doctor_id' => 'Bác sỹ thực hiện',
             'status' => 'Trạng thái',
-            'money' => 'Số tiền',
-            'quantity' => 'Số lần',
+            'money' => 'Đơn giá',
+            'quantity' => 'Số lượng',
             'branh_id' => 'Chi nhánh',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
@@ -99,11 +98,29 @@ class MedicalRecordItemChild extends \yii\db\ActiveRecord
         }
     }
 
+    public function optionStatus()
+    {
+        return [
+            0 => 'Chưa thực hiện',
+            1 => 'Đã thực hiện',
+        ];
+    }
     public function getUserAdmin()
     {
         return $this->hasOne(UserAdmin::className(), ['id' => 'doctor_id'])->select('id,username,fullname');
     }
 
+    public function getName() {
+
+        $name = UserAdmin::find()->all();
+        return ArrayHelper::map($name, 'id', 'fullname');
+        foreach ($name as $data ) {
+              return [
+                  $data['id']=>$data['fullname'],
+              ];
+        }
+
+    }
     public function getUser()
     {
         return $this->hasOne(User::className(), ['id' => 'user_id'])->select('id,username');

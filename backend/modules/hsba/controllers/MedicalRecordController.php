@@ -7,7 +7,6 @@ use common\components\ClaNhakhoa;
 use common\models\appointment\Appointment;
 use common\models\branch\Branch;
 use common\models\commission\Commission;
-use common\models\commission_v2\CommissionV2;
 use common\models\hsba\MedicalRecordImageV2;
 use common\models\hsba\MedicalRecordItemChildV2;
 use common\models\hsba\MedicalRecordItemCommissionV2;
@@ -26,12 +25,10 @@ use common\models\medicine\Medicine;
 use common\models\product\Product;
 use common\models\product\ProductCategory;
 use common\models\sale\BranchSales;
-use common\models\sale\BranchSalesV2;
 use common\models\sale\CustomerSales;
 use common\models\sale\DoctorSales;
 use common\models\sale\OperationSales;
 use common\models\thuchi\ThuChi;
-use common\models\thuchi\ThuChiV2;
 use common\models\user\MedicalRecordBeforeImage;
 use common\models\user\MedicalRecordChild;
 use common\models\hsba\MedicalRecordChildV2;
@@ -349,7 +346,7 @@ class MedicalRecordController extends Controller
         $branchs = Branch::getBranch();
         $users = \backend\models\UserAdmin::getUserIntroduce();
         $user_admin = Yii::$app->user->getIdentity();
-        $medical_record_item = MedicalRecordItemV2::find()->where(['medical_record_id' => $id])->joinWith('branch')->orderBy('created_at DESC')->all();
+        $medical_record_item = MedicalRecordItemV2::find()->where(['medical_record_item_v2.id' => $id])->joinWith('branch')->orderBy('created_at DESC')->all();
 
         $request = Yii::$app->request->post();
         if ($request) {
@@ -448,7 +445,7 @@ class MedicalRecordController extends Controller
                         //End Lưu dữ liệu khám của từng thủ thuật mỗi lần khám
 
                         //Begin lưu % hoa hồng
-                        if (isset($team_item_user[$key]) && ClaNhakhoa::check_array($team_item_user[$key])) {
+                        if (ClaNhakhoa::check_array($team_item_user[$key])) {
                             $price_loaimau = $product->loaimau->money ? $product->loaimau->money : 0;
                             $medical_record_item_commission = new MedicalRecordItemCommissionV2();
                             $medical_record_item_commission->medical_record_id = $model->id;
@@ -1088,16 +1085,13 @@ class MedicalRecordController extends Controller
 
 
         $request = $_POST;
-        $model = MedicalRecordV2::findOne($id);
+        $model = MedicalRecord::findOne($id);
         $transaction = Yii::$app->db->beginTransaction();
         try {
             if (ClaNhakhoa::check_array($request['pay_branch'])) {
                 foreach ($request['pay_branch'] as $key => $value) {
-                    $medical_record_item_child = MedicalRecordItemChildV2::find()->where(['id' => $key])->one(); //Lấy chi tiết lần kham của thủ thuật
+                    $medical_record_item_child = MedicalRecordItemChildV2::findOne($key); //Lấy chi tiết lần kham của thủ thuật
                     if ($medical_record_item_child) {
-                        $da_thanh_toan = isset($medical_record_item_child->payment) && ClaNhakhoa::check_array($medical_record_item_child->payment) ? \common\components\ClaNhakhoa::getSum($medical_record_item_child->payment,'money') : 0;
-                        $tong_tien = \common\models\hsba\PaymentHistoryV2::getMoney($medical_record_item_child->money,$medical_record_item_child->type_sale,$medical_record_item_child->sale_value);
-
                         //Lưu thanh toán
                         $time_create = isset($request['pay_time_create'][$key]) && $request['pay_time_create'][$key] ? strtotime($request['pay_time_create'][$key]) : time();
                         $payment = new PaymentHistoryV2();
@@ -1112,7 +1106,7 @@ class MedicalRecordController extends Controller
                         if (!$payment->save()) throw new Exception('Lưu lịch sử thanh toán lỗi');
 
                         //Lưu doanh số chi nhánh
-                        $branch_log = new BranchSalesV2();
+                        $branch_log = new BranchSales();
                         $branch_log->branch_id = $request['pay_branch'][$key];
                         $branch_log->payment_id = $payment->id;
                         $branch_log->money = $request['pay_money'][$key];
@@ -1130,68 +1124,58 @@ class MedicalRecordController extends Controller
                             $danh_sach_nguoi_huong_hoa_hong = explode(',', $medical_record_item_commission['user_id']);
                             $type_commission = explode(',', $medical_record_item_commission['type']);
                             $value_commission = explode(',', $medical_record_item_commission['value']);
-                            $tong_tien_dich_vu = PaymentHistoryV2::getMoney($medical_record_item_child->money,$medical_record_item_child->type_sale,$medical_record_item_child->sale_value) ;
-                            $tong_tien_da_thanh_toan = 0 ;
-
                             foreach ($danh_sach_nguoi_huong_hoa_hong as $key_us => $item) {
-                                $commission = new CommissionV2();
-                                $commission->medical_record_id = $id;
-                                $commission->user_id = $item;
-                                $commission->type = CommissionV2::TYPE_PAYMENT;
-                                $commission->type_id = $key;
-                                $commission->value_commission = $value_commission[$key_us];
-                                $commission->type_commission = $type_commission[$key_us];
-                                if ($type_commission[$key_us] == MedicalRecordItemCommissionV2::TYPE_1) {
+                                $commission = new Commission();
+                                $commission->admin_id = $item;
+                                $commission->value = $value_commission[$key_us];
+                                if ($type_commission[$key_us] == MedicalRecordItemCommission::TYPE_1) {
                                     $commission->money = ($value_commission[$key_us] / 100) * $request['pay_money'][$key];
                                     $money_doctor = DoctorSales::getValueSale($value_commission[$key_us], $request['pay_money'][$key]);
                                 } else {
-                                    if ((int)($tong_tien_dich_vu * 30 / 100) <= $request['pay_money'][$key] + $tong_tien_da_thanh_toan && $tong_tien_da_thanh_toan < (int)($tong_tien_dich_vu * 30 / 100)) {
+                                    if ((int)($item_commission->price * 30 / 100) <= $request['pay_money'][$key] + $item_commission->price_payment && $item_commission->price_payment < (int)($item_commission->price * 30 / 100)) {
                                         $commission->money = $value_commission[$key_us];
                                         $money_doctor = $value_commission[$key_us] / 4;
                                     } else {
                                         continue;
                                     }
                                 }
-                                $commission->branch_id = $request['pay_branch'][$key];
-                                $commission->payment_id = $payment->id;
+                                $commission->total_money = $money;
+                                $commission->total_money_received = $request['pay_money'][$key];
+                                $commission->user_id = $model->user_id;
+                                $commission->medical_record_id = $id;
+                                $commission->branch_id = $branch_id;
+                                $commission->type = Commission::TYPE_PAYMENT;
+                                $commission->type_money = $type_commission[$key_us];
+                                $commission->item_commission_id = $item_commission->id;
                                 $commission->created_at = $time_create;
                                 if (!$commission->save()) throw new Exception('Lưu hoa hồng lỗi');
-
-                                $saveDoctor = self::saveDoctorSales([
-                                    'doctor_id' => $item,
-                                    'money' => $money_doctor,
-                                    'product_id' => $medical_record_item_child->product_id,
-                                    'medical_record_id' => $id,
-                                    'time_create' => $time_create,
-                                    'payment_id' => $payment->id,
-                                    'branch_id' => $payment->branch_id,
-                                    'week' => date('W',$time_create),
-                                    'month' => date('m',$time_create),
-                                    'year' => date('Y',$time_create),
-                                ]);
-                                if (!$saveDoctor) throw new Exception('Lưu doanh số bác sỹ lỗi');
                             }
                         }
-
-                        //THống kê thu chi
-                        $thuchi = new ThuChiV2();
-                        $thuchi->name = 'Thu tiền khám bệnh';
-                        $thuchi->type = ThuChiV2::TYPE_THU;
-                        $thuchi->user_id = $model->user_id;
-                        $thuchi->money = $request['pay_money'][$key];
-                        $thuchi->time = $time_create;
-                        $thuchi->admin_id = Yii::$app->user->id;
-                        $thuchi->nguoi_chi = Yii::$app->user->id;
-                        $thuchi->branch_id = $request['pay_branch'][$key];
-                        $thuchi->type_id = ThuChi::TYPE_THU_PAYMENT;
-                        $thuchi->payment_id = $payment->id;
-                        $thuchi->type_payment = $request['type_payment'][$key];
-                        $thuchi->medical_record_id = $id;
-                        $thuchi->created_at = $time_create;
-                        if (!$thuchi->save()) throw new Exception('Lưu thu chi lỗi');
-
                     }
                 }
+
+
+                //THống kê thu chi
+                $thuchi = new ThuChi();
+                $thuchi->name = 'Thu tiền khám bệnh';
+                $thuchi->type = ThuChi::TYPE_THU;
+                $thuchi->user_id = $model->user_id;
+                $thuchi->money = $money - $pay_sale;
+                if ($type_sale) {
+                    if ($type_sale == PaymentHistory::TYPE_SALE_2) {
+                        $thuchi->money = ($money * (100 - $pay_sale)) / 100;
+                    }
+                }
+                $thuchi->time = $time_create;
+                $thuchi->admin_id = Yii::$app->user->id;
+                $thuchi->nguoi_chi = Yii::$app->user->id;
+                $thuchi->branch_id = $branch_id;
+                $thuchi->type_id = ThuChi::TYPE_THU_PAYMENT;
+                $thuchi->payment_id = $payment->id;
+                $thuchi->type_payment = $type_payment;
+                $thuchi->medical_record_id = $id;
+                $thuchi->created_at = $time_create;
+                if (!$thuchi->save()) throw new Exception('Lưu thu chi lỗi');
             }
 
             $transaction->commit();
@@ -2289,6 +2273,9 @@ class MedicalRecordController extends Controller
         $branchs = Branch::getBranch();
         $user_admin = Yii::$app->user->getIdentity();
         $medical_record_item_child = MedicalRecordItemChildV2::find()->where(['medical_record_item_child_v2.medical_record_id' => $id])->joinWith(['payment', 'product'])->asArray()->all();
+//        print_r('<pre>');
+//        print_r($medical_record_item_child);
+//        die;
         return $this->renderPartial('layouts/pay', [
                 'id' => $id,
                 'medical_record_item_child' => $medical_record_item_child,

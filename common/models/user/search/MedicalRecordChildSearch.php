@@ -88,7 +88,7 @@ class MedicalRecordChildSearch extends MedicalRecordChild
         // grid filtering conditions
         $query->andFilterWhere([
         ]);
-
+        
         return $dataProvider;
     }
 }

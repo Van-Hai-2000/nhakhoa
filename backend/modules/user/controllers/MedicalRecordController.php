@@ -347,6 +347,7 @@ class MedicalRecordController extends Controller
         $request = Yii::$app->request->post();
         if ($request) {
             $transaction = Yii::$app->db->beginTransaction();
+            try {
                 $products = [];
                 $item_child_prd = [];
                 $item_count_prd = [];
@@ -546,7 +547,15 @@ class MedicalRecordController extends Controller
                 $transaction->commit();
                 return $this->refresh();
 
-
+            } catch (Exception $e) {
+                Yii::warning($e->getMessage());
+                $transaction->rollBack();
+                throw $e;
+            } catch (\Throwable $e) {
+                $response['errorsth'] = $e->getMessage();
+                $transaction->rollBack();
+                throw $e;
+            }
 
         }
 
@@ -1649,6 +1658,19 @@ class MedicalRecordController extends Controller
         return true;
     }
 
+    public function actionLoadFix($id)
+    {
+        $model = MedicalRecordItemChild ::find() -> where(['id' => $id]) -> one();
+        $product = Product ::findOne($model -> product_id);
+        $user = UserAdmin ::findOne($model -> doctor_id);
+        $user_all = UserAdmin ::find() -> all();
+        return $this -> renderPartial('layouts/update', [
+            'model' => $model,
+            'product' => $product,
+            'user' => $user,
+            'user_all' => $user_all,
+        ]);
+    }
 
     public function actionLoadFactory($id)
     {

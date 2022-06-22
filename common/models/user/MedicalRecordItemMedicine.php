@@ -125,4 +125,14 @@ class MedicalRecordItemMedicine extends ClaActiveRecordLog
     {
         return $this->hasOne(Medicine::className(), ['id' => 'medicine_id'])->select('id,name,price');
     }
+    static public function getAllbyDoctor($options = [],$id = 0){
+        $query = self::find()->where(['doctor_id' => $id]);
+
+        if (isset($options['created_at']) && $options['created_at'] ) {
+            $query->andWhere(['medical_record_item_medicine.created_at' => strtotime($options['created_at'])]);
+        }
+
+        $data = $query->joinWith(['medicine', 'userAdmin','user'])->orderBy('created_at DESC')->all();
+        return $data;
+    }
 }

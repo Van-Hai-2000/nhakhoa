@@ -53,7 +53,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             ],
                             [
                                 'class' => 'yii\grid\ActionColumn',
-                                'template' => '{edit_docter}',
+                                'template' => '{view}{edit_docter}',
                                 'buttons' => [
                                     'edit_docter' => function ($url, $model) {
                                         return Html::a('<span class="glyphicon glyphicon-pencil"></span>', 'update-doctor?id='.$model->id, [

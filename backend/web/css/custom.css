@@ -534,19 +534,3 @@
     margin: 0 10px 0 5px;
     color: midnightblue;
 }
-.dstt{
-    border-bottom: 1px solid #a2a2a2;
-    margin-bottom: 20px !important;
-}
-.dstt:last-child{
-    border-bottom: unset;
-}
-.title-dstt-commission{
-    background: #008000;
-    padding: 5px;
-    color: #fff;
-    margin-bottom: 2px
-}
-.change_text{
-    background: red !important;
-}

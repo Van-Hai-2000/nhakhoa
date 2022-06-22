@@ -15,8 +15,7 @@ $payment_history = \common\models\hsba\PaymentHistoryV2::find()->where(['medical
                 <?php if (\common\components\ClaNhakhoa::check_array($medical_record_item_child)): ?>
                     <?php foreach ($medical_record_item_child as $item):
                         $da_thanh_toan = isset($item['payment']) && ClaNhakhoa::check_array($item['payment']) ? \common\components\ClaNhakhoa::getSum($item['payment'],'money') : 0;
-                        $tong_tien = \common\models\hsba\PaymentHistoryV2::getMoney($item['money'],$item['type_sale'],$item['sale_value']);
-                    ?>
+                        ?>
                         <div class="row">
                             <div class="col-md-6" style="display: flex">
                                 <button type="button" class="btn btn-success" id="action_<?= $item['id'] ?>" onclick="edit_payment(<?= $item['id'] ?>)">Sửa
@@ -24,13 +23,13 @@ $payment_history = \common\models\hsba\PaymentHistoryV2::find()->where(['medical
                                 <input type="text" class="form-control" value="<?= isset($item['product']['name']) && $item['product']['name'] ? $item['product']['name'] : '' ?>" disabled>
                             </div>
                             <div class="col-md-2">
-                                <input type="text" class="form-control" value="Tổng: <?= number_format($tong_tien) ?>" disabled>
+                                <input type="text" class="form-control" value="Tổng: <?= number_format($item['money']) ?>" disabled>
                             </div>
                             <div class="col-md-2">
                                 <input type="text" class="form-control" value="Đã TT: <?= number_format($da_thanh_toan) ?>" disabled>
                             </div>
                             <div class="col-md-2">
-                                <input type="text" class="form-control" value="Còn lại: <?= number_format($tong_tien - $da_thanh_toan) ?>" disabled>
+                                <input type="text" class="form-control" value="Còn lại: <?= number_format($item['money'] - $da_thanh_toan) ?>" disabled>
                             </div>
                         </div>
                         <div class="row">
@@ -94,7 +93,35 @@ $payment_history = \common\models\hsba\PaymentHistoryV2::find()->where(['medical
         </tr>
         </thead>
         <tbody class="body_list_don_thuoc">
-
+        <?php if (isset($payment_history) && $payment_history): ?>
+            <?php foreach ($payment_history as $value):
+                $type_payment = \common\models\user\PaymentHistory::getTypePayment();
+                ?>
+                <tr>
+                    <td><?= date('d-m-Y H:i:s', $value['created_at']) ?></td>
+                    <td><?= $value['branch']['name'] ?></td>
+                    <td><?= $value['type_payment'] ? $type_payment[$value['type_payment']] : 'Tiền mặt' ?></td>
+                    <td><?= number_format($value['money']) ?></td>
+                    <td><?= $value['type_sale'] == \common\models\user\PaymentHistory::TYPE_SALE_1 ? number_format($value['pay_sale']) . 'đ' : $value['pay_sale'] . '%' ?></td>
+                    <td><?= number_format(\common\models\user\PaymentHistory::getMoney($value['money'], $value['type_sale'], $value['pay_sale'])) ?></td>
+                    <td><?= $value['pay_sale_description'] ?></td>
+                    <td><?= $value['userAdmin']['fullname'] ?></td>
+                    <td>
+                        <a href="javascript:void(0)"
+                           data-url="<?= \yii\helpers\Url::to(['edit-payment', 'id' => $value['id']]) ?>"
+                           title="Sửa" aria-label="Sửa"
+                           onclick="edit_payment(<?= $value['id'] ?>,'<?= date('Y-m-d\TH:i', $value['created_at']) ?>')">
+                            <span class="glyphicon glyphicon-pencil"></span>
+                        </a>
+                        <a href="<?= \yii\helpers\Url::to(['delete-payment', 'id' => $value['id']]) ?>"
+                           title="Xóa" aria-label="Xóa" data-pjax="0"
+                           data-confirm="Bạn có chắc là sẽ xóa mục này không?" data-method="post">
+                            <span class="glyphicon glyphicon-trash"></span>
+                        </a>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        <?php endif; ?>
         </tbody>
     </table>
 </div>

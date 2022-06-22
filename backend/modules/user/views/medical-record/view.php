@@ -43,11 +43,13 @@ $mess = Yii::$app->session->get('total_com');
         </div>
         <div class="col-md-3">
             <select id="medicalrecord-team" class="form-control team" name="team[]" required multiple>
+
                 <?php if (isset($users) && $users): ?>
                     <?php foreach ($users as $key => $user): ?>
                         <option value="<?= $key ?>"><?= $user ?></option>
                     <?php endforeach; ?>
                 <?php endif; ?>
+
             </select>
         </div>
         <div class="col-md-1 medicalrecord-action">
@@ -90,7 +92,7 @@ $mess = Yii::$app->session->get('total_com');
                     </div>
                     <div class="row" style="margin-top: 20px">
                         <div class="col-md-4">
-                            <label for="">Tổng phải thanh toán</label>
+                            <label for="">Tổng phải thanh toán ( Đã bao gồm VAT 10% )</label>
                             <h2 class="money"><?= number_format($model->total_money - $model->sale_money) ?> đ
                             <?php if($model->sale_money): ?>
                                 <span class="money-sale"><?= number_format($model->total_money) ?> đ</span>

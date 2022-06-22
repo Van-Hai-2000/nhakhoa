@@ -45,15 +45,15 @@
         <!--Hình thức giảm giá-->
         <div class="col-md-2">
             <select id="hinh_thuc_giam_gia" class="form-control" name="hinh_thuc_giam_gia[<?= $stt ?>]" required>
-                <option value="<?= \common\components\ClaNhakhoa::TYPE_MONEY_1 ?>">Giảm theo %</option>
-                <option value="<?= \common\components\ClaNhakhoa::TYPE_MONEY_2 ?>">Giảm theo tiền mặt</option>
+                <option value="1">Giảm theo %</option>
+                <option value="2">Giảm theo tiền mặt</option>
             </select>
         </div>
 
         <!--Giá trị giảm giá-->
         <div class="col-md-3">
             <input id="gia_tri_giam_gia" type="number" class="form-control" name="gia_tri_giam_gia[<?= $stt ?>]"
-                   placeholder="Giá trị giảm giá" min="0">
+                   placeholder="Thành tiền" min="0">
         </div>
 
         <!--VAT-->
@@ -117,7 +117,7 @@
     <div class="row" style="margin-bottom: 5px">
         <div class="col-md-12"><input name="prd_note[<?= $stt ?>]" class="form-control" placeholder="Nhập nội dung thủ thuật"/></div>
     </div>
-    <div id="dshh_<?= $stt ?>" class="danh_sach_huong_hoa_hong">
+    <div id="dshh_<?= $stt ?>">
 
     </div>
     <div class="help-block"></div>

@@ -4,8 +4,11 @@ namespace backend\controllers;
 
 use backend\modules\auth\models\Assignment;
 use common\components\UploadLib;
+use common\models\appointment\Appointment;
 use common\models\auth\AuthAssignment;
 use common\models\banner\Banner;
+use common\models\medical_record\Factory;
+use common\models\user\MedicalRecordItemMedicine;
 use Yii;
 use backend\models\UserAdmin;
 use backend\models\search\UserAdminSearch;
@@ -68,11 +71,40 @@ class UserAdminController extends Controller
      * @param integer $id
      * @return mixed
      */
-    public function actionView($id)
+    public function actionView()
     {
+        $id = Yii::$app->request->get('id', 0);
+        $model = UserAdmin::find()->where(['id' => $id])->asArray()->One();
+        //Đơn thuốc
+        $medical_record_item_medicine = MedicalRecordItemMedicine::find()->where(['doctor_id' => $id])->joinWith(['medicine', 'userAdmin', 'user'])->orderBy('created_at DESC')->all();
+        //Đặt xưởng
+        $factory = Factory::find()->where(['admin_id' => $id])->joinWith(['branch', 'userAdmin', 'loaimau'])->orderBy('created_at DESC')->asArray()->all();
+        //Lịch hẹn
+        $lich_hen = Appointment::find()->where(['doctor_id' => $id, 'status_delete' => 0])->joinWith(['userAdmin', 'branch', 'user'])->asArray()->all();
+
         return $this->render('view', [
-            'model' => $this->findModel($id),
+            'model' =>$model ,
+            'medical_record_item_medicine'=> $medical_record_item_medicine,
+            'factory'=>$factory,
+            'lich_hen'=> $lich_hen,
+            'id'=>$id
         ]);
+    }
+    public function actionAjaxrender()
+    {
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            $id = Yii::$app->request->get('id', 0);
+            $created_at = Yii::$app->request->get('created_at', '');
+            $data = MedicalRecordItemMedicine::getAllbyDoctor(array_merge($_GET, ['created_at' => $created_at]), $id);
+            $html = $this->renderAjax('table_donthuoc', [
+                'medical_record_item_medicine' => $data
+            ]);
+            return [
+                'code' => 200,
+                'html' => $html
+            ];
+        }
     }
 
     /**
@@ -161,11 +193,66 @@ class UserAdminController extends Controller
         $model = new SignupForm();
         $model->scenario = 'create';
         if ($model->load(Yii::$app->request->post())) {
-            if ($user = $model->signup()) {
+            $file = $_FILES['src'];
+            if ($file && $file['name']) {
+                $model->src = 'true';
+                $extensions = Banner::allowExtensions();
+                if (!isset($extensions[$file['type']])) {
+                    $model->addError('src', 'Ảnh không đúng định dạng');
+                }
+            }
+            $up = new UploadLib($file);
+            $up->setPath(array('user'));
+            $up->uploadFile();
+            $response = $up->getResponse(true);
+            if ($up->getStatus() == '200') {
+                $model->src = $response['baseUrl'] . $response['name'];
+            } else {
+                $model->src = '';
+            }
+            $file_iden_before = $_FILES['image_identification_before'];
+            if ($file_iden_before && $file_iden_before['name']) {
+                $model->image_identification_before = 'true';
+                $extensions = Banner::allowExtensions();
+                if (!isset($extensions[$file_iden_before['type']])) {
+                    $model->addError('image_identification_before', 'Ảnh không đúng định dạng');
+                }
+            }
+            $up = new UploadLib($file_iden_before);
+            $up->setPath(array('user'));
+            $up->uploadFile();
+            $response = $up->getResponse(true);
+            if ($up->getStatus() == '200') {
+                $model->image_identification_before = $response['baseUrl'] . $response['name'];
+            } else {
+                $model->image_identification_before = '';
+            }
+            $file_iden_after = $_FILES['image_identification_after'];
+            if ($file_iden_after && $file_iden_after['name']) {
+                $model->image_identification_after = 'true';
+                $extensions = Banner::allowExtensions();
+                if (!isset($extensions[$file_iden_after['type']])) {
+                    $model->addError('image_identification_after', 'Ảnh không đúng định dạng');
+                }
+            }
+            $up = new UploadLib($file_iden_after);
+            $up->setPath(array('user'));
+            $up->uploadFile();
+            $response = $up->getResponse(true);
+            if ($up->getStatus() == '200') {
+                $model->image_identification_after = $response['baseUrl'] . $response['name'];
+            } else {
+                $model->image_identification_after = '';
+            }
+
+            $model->date_range_identification = strtotime($model->date_range_identification);
+            $model->date_range_certificates = strtotime($model->date_range_certificates);
+
+             if ($user = $model->signup()) {
+                 Yii::$app->session->setFlash('success', 'Thêm mới thành công.');
                 return $this->redirect(['doctor']);
             }
         }
-
         return $this->render('doctor/create', [
             'model' => $model,
         ]);
@@ -177,6 +264,59 @@ class UserAdminController extends Controller
         $model = new SignupForm();
         $model->attributes = $model_admin->attributes;
         if ($model->load(Yii::$app->request->post())) {
+            $file = $_FILES['src'];
+            if ($file && $file['name']) {
+                $model->src = 'true';
+                $extensions = Banner::allowExtensions();
+                if (!isset($extensions[$file['type']])) {
+                    $model->addError('src', 'Ảnh không đúng định dạng');
+                }
+            }
+            $up = new UploadLib($file);
+            $up->setPath(array('user'));
+            $up->uploadFile();
+            $response = $up->getResponse(true);
+            if ($up->getStatus() == '200') {
+                $model->src = $response['baseUrl'] . $response['name'];
+            } else {
+                $model->src = '';
+            }
+            $file_iden_before = $_FILES['image_identification_before'];
+            if ($file_iden_before && $file_iden_before['name']) {
+                $model->image_identification_before = 'true';
+                $extensions = Banner::allowExtensions();
+                if (!isset($extensions[$file_iden_before['type']])) {
+                    $model->addError('image_identification_before', 'Ảnh không đúng định dạng');
+                }
+            }
+            $up = new UploadLib($file_iden_before);
+            $up->setPath(array('user'));
+            $up->uploadFile();
+            $response = $up->getResponse(true);
+            if ($up->getStatus() == '200') {
+                $model->image_identification_before = $response['baseUrl'] . $response['name'];
+            } else {
+                $model->image_identification_before = '';
+            }
+            $file_iden_after = $_FILES['image_identification_after'];
+            if ($file_iden_after && $file_iden_after['name']) {
+                $model->image_identification_after = 'true';
+                $extensions = Banner::allowExtensions();
+                if (!isset($extensions[$file_iden_after['type']])) {
+                    $model->addError('image_identification_after', 'Ảnh không đúng định dạng');
+                }
+            }
+            $up = new UploadLib($file_iden_after);
+            $up->setPath(array('user'));
+            $up->uploadFile();
+            $response = $up->getResponse(true);
+            if ($up->getStatus() == '200') {
+                $model->image_identification_after = $response['baseUrl'] . $response['name'];
+            } else {
+                $model->image_identification_after = '';
+            }
+            $model->date_range_identification = strtotime($model->date_range_identification);
+            $model->date_range_certificates = strtotime($model->date_range_certificates);
             $model_admin->attributes = $model->attributes;
             if ($model->password) {
                 $model_admin->setPassword($model->password);
@@ -185,6 +325,7 @@ class UserAdminController extends Controller
                 $model_admin->setPassword2($model->password2);
             }
             $model_admin->generateAuthKey();
+            $model_admin->save();
             if ($model_admin->save()) {
                 Yii::$app->session->setFlash('success', 'Lưu thành công.');
                 return $this->redirect(['doctor']);

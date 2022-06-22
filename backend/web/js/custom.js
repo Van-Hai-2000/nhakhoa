@@ -176,18 +176,14 @@ function cancelItem(t, id, medical_record_id) {
 }
 
 //Load danh sách hoa hồng
-function load_commission(item_id, item_child_id, product_id,type=1) {
-    var url = '/admin/user/medical-record/load-commission';
-    if(type != 1){
-        url = '/admin/hsba/medical-record/load-commission';
-    }
+function load_commission(item_id, item_child_id, product_id) {
     $.ajax({
-        url: url,
+        url: '/admin/user/medical-record/load-commission',
         type: 'GET',
         data: {
             item_id: item_id,
             item_child_id: item_child_id,
-            product_id: product_id,
+            product_id: product_id
         },
         success: function (data) {
             $('.commission_body').empty().html(data)
@@ -1071,6 +1067,27 @@ backendNgApp.controller('ngNotifyController', [
             }
         }
 
+        function init() {
+            let getNotify = function () {
+                $http({
+                    url: $notifyUrl,
+                    method: "POST",
+                    data: {}
+                }).then(function (response) {
+                    if (response?.data?.code === 200) {
+                        $scope.controllerData.unreadCount = parseInt(response?.data?.data?.unread);
+                        $scope.controllerData.notify = response?.data?.data?.notifies;
+                        $scope.controllerData.noNotify = false;
+                    }
+                }, function (error) {
+                    console.log(error)
+                })
+            }
+            getNotify();
+            let $stop = $interval(getNotify, 3000);
+        }
+
+        init();
     }
 ]);
 

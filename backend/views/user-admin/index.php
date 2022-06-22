@@ -62,7 +62,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             ],
                             [
                                 'class' => 'yii\grid\ActionColumn',
-                                'template' => '{update}{authenticate}',
+                                'template' => '{view}{update}{authenticate}',
                                 'buttons' => [
                                     'authenticate' => function ($url, $model) {
                                         return Html::a('Cấp quyền', 'auth?id='.$model->id, [

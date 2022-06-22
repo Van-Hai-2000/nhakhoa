@@ -6,6 +6,7 @@ use backend\models\UserAdmin;
 use common\components\ClaActiveRecordLog;
 use common\models\auth\AuthAssignment;
 use common\models\District;
+use common\models\Province;
 use common\models\Ward;
 use Yii;
 use yii\behaviors\TimestampBehavior;
@@ -167,5 +168,16 @@ class User extends ClaActiveRecordLog
     function getAuthAssignment()
     {
         return $this->hasMany(AuthAssignment::className(), ['user_id' => 'id']);
+    }
+    static  public function getAddress($pro,$dis,$ward){
+        $province_id= Province::findOne($pro);
+          $district_id = District::findOne($dis);
+          $ward_id= Ward::findOne($ward);
+
+          if(isset($province_id)&& $province_id && isset($district_id)&& $district_id &&  isset($ward_id)&& $ward_id ){
+              return  $ward_id->name. " - " .  $district_id->name ." - "  .$province_id->name ;
+          }
+          else
+              return '';
     }
 }

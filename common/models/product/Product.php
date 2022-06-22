@@ -3,7 +3,6 @@
 namespace common\models\product;
 
 use common\components\ClaActiveRecordLog;
-use common\models\LoaiMau;
 use Yii;
 use yii\db\Query;
 use common\components\ClaLid;
@@ -1496,9 +1495,5 @@ class Product extends ClaActiveRecordLog
     static function getProductService($shop_id)
     {
         return self::find()->where(['shop_id' => $shop_id, 'pay_servive' => 1])->one();
-    }
-
-    public function getLoaimau(){
-        return $this->hasOne(LoaiMau::className(), ['id' => 'loaimau_id']);
     }
 }
